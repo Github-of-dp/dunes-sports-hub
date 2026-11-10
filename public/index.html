@@ -11,10 +11,6 @@
     <style>
         body { background-color: #FAF7F2; color: #2C2C2C; font-family: 'Plus Jakarta Sans', sans-serif; }
         .school-card { background: #FFFFFF; border: 1px solid #E6D7C3; box-shadow: 0 4px 6px -1px rgba(122, 28, 46, 0.05); }
-        .bg-maroon { background-color: #7A1C2E; }
-        .text-maroon { color: #7A1C2E; }
-        .border-maroon { border-color: #7A1C2E; }
-        .hover-maroon:hover { background-color: #611222; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
@@ -37,7 +33,6 @@
         </div>
     </header>
 
-    <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-8">
 
         <!-- SPORT SELECTION LANDING SCREEN -->
@@ -53,60 +48,31 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Football Card -->
                 <div onclick="selectSport('football')" class="school-card rounded-3xl p-6 cursor-pointer hover:border-[#7A1C2E] transition-all duration-300 hover:shadow-lg group flex flex-col justify-between space-y-4">
-                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition">
-                        <i class="fa-solid fa-futbol"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-[#7A1C2E]">Football</h3>
-                        <p class="text-xs text-stone-600 mt-1">Golden boot, clean sheets, goal difference tables & matches.</p>
-                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition"><i class="fa-solid fa-futbol"></i></div>
+                    <div><h3 class="text-lg font-bold text-[#7A1C2E]">Football</h3><p class="text-xs text-stone-600 mt-1">Goals, assists, GD tables & matches.</p></div>
                     <span class="text-xs font-bold text-[#7A1C2E] flex items-center gap-1">Open Hub <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                 </div>
-
-                <!-- Cricket Card -->
                 <div onclick="selectSport('cricket')" class="school-card rounded-3xl p-6 cursor-pointer hover:border-[#7A1C2E] transition-all duration-300 hover:shadow-lg group flex flex-col justify-between space-y-4">
-                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition">
-                        <i class="fa-solid fa-baseball-bat-ball"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-[#7A1C2E]">Cricket</h3>
-                        <p class="text-xs text-stone-600 mt-1">Orange cap, purple cap, NRR standings & live scorecards.</p>
-                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition"><i class="fa-solid fa-baseball-bat-ball"></i></div>
+                    <div><h3 class="text-lg font-bold text-[#7A1C2E]">Cricket</h3><p class="text-xs text-stone-600 mt-1">Runs, wickets, NRR standings & scorecards.</p></div>
                     <span class="text-xs font-bold text-[#7A1C2E] flex items-center gap-1">Open Hub <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                 </div>
-
-                <!-- Volleyball Card -->
                 <div onclick="selectSport('volleyball')" class="school-card rounded-3xl p-6 cursor-pointer hover:border-[#7A1C2E] transition-all duration-300 hover:shadow-lg group flex flex-col justify-between space-y-4">
-                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition">
-                        <i class="fa-solid fa-volleyball"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-[#7A1C2E]">Volleyball</h3>
-                        <p class="text-xs text-stone-600 mt-1">Spike points, blocks, aces, set scores & house points.</p>
-                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition"><i class="fa-solid fa-volleyball"></i></div>
+                    <div><h3 class="text-lg font-bold text-[#7A1C2E]">Volleyball</h3><p class="text-xs text-stone-600 mt-1">Spike points, blocks, aces & set scores.</p></div>
                     <span class="text-xs font-bold text-[#7A1C2E] flex items-center gap-1">Open Hub <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                 </div>
-
-                <!-- Basketball Card -->
                 <div onclick="selectSport('basketball')" class="school-card rounded-3xl p-6 cursor-pointer hover:border-[#7A1C2E] transition-all duration-300 hover:shadow-lg group flex flex-col justify-between space-y-4">
-                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition">
-                        <i class="fa-solid fa-basketball"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-[#7A1C2E]">Basketball</h3>
-                        <p class="text-xs text-stone-600 mt-1">Top scorers, 3-pointers, assists & court standings.</p>
-                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition"><i class="fa-solid fa-basketball"></i></div>
+                    <div><h3 class="text-lg font-bold text-[#7A1C2E]">Basketball</h3><p class="text-xs text-stone-600 mt-1">Top scorers, 3-pointers & assists.</p></div>
                     <span class="text-xs font-bold text-[#7A1C2E] flex items-center gap-1">Open Hub <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                 </div>
             </div>
         </div>
 
-        <!-- SPORT DASHBOARD VIEW (Hidden by default) -->
+        <!-- SPORT DASHBOARD VIEW -->
         <div id="sport-dashboard-view" class="hidden space-y-6">
-            
-            <!-- Sport Navigation Bar -->
             <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E6D7C3] shadow-sm">
                 <button onclick="backToSelector()" class="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl transition flex items-center gap-2">
                     <i class="fa-solid fa-arrow-left"></i> Back to Sports
@@ -117,7 +83,6 @@
                 </div>
             </div>
 
-            <!-- Tabs Bar -->
             <div class="bg-white border border-[#E6D7C3] rounded-2xl p-2 shadow-sm flex overflow-x-auto gap-2">
                 <button onclick="switchSportTab('live')" id="tab-btn-live" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-[#7A1C2E] text-white transition shadow-sm whitespace-nowrap">🔴 Live Match</button>
                 <button onclick="switchSportTab('table')" id="tab-btn-table" class="px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 transition whitespace-nowrap">📊 Table / Standings</button>
@@ -126,50 +91,36 @@
                 <button onclick="switchSportTab('teams')" id="tab-btn-teams" class="px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 transition whitespace-nowrap">👥 Teams & Players</button>
             </div>
 
-            <!-- TAB CONTENTS -->
-            
-            <!-- 1. LIVE MATCH -->
+            <!-- TAB 1: LIVE MATCH -->
             <div id="section-live" class="space-y-4 animate-fadeIn">
                 <div class="school-card rounded-3xl p-6 sm:p-8 space-y-6 border-l-8 border-[#7A1C2E]">
                     <div class="flex justify-between items-center">
-                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold animate-pulse">
-                            <span class="w-2 h-2 rounded-full bg-red-600"></span> Live Stream Active
-                        </span>
-                        <span id="live-venue" class="text-xs font-mono text-stone-500">Main Court / Ground</span>
+                        <span id="live-badge" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold"></span>
+                        <span id="live-venue" class="text-xs font-mono text-stone-500">Main Ground</span>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center">
-                        <div>
-                            <h3 id="live-team-a" class="text-xl sm:text-2xl font-black text-stone-900 uppercase">Red House</h3>
-                            <p class="text-xs text-[#8C6D46] font-bold">Ridge</p>
-                        </div>
+                        <div><h3 id="live-team-a" class="text-xl sm:text-2xl font-black text-stone-900 uppercase">Team A</h3><p id="live-house-a" class="text-xs text-[#8C6D46] font-bold">House</p></div>
                         <div class="flex flex-col items-center justify-center">
                             <div class="flex items-baseline gap-3">
-                                <span id="live-score-a" class="text-5xl font-black text-[#7A1C2E] font-mono">2</span>
+                                <span id="live-score-a" class="text-5xl font-black text-[#7A1C2E] font-mono">0</span>
                                 <span class="text-2xl font-light text-stone-400">-</span>
-                                <span id="live-score-b" class="text-5xl font-black text-stone-900 font-mono">1</span>
+                                <span id="live-score-b" class="text-5xl font-black text-stone-900 font-mono">0</span>
                             </div>
-                            <span id="live-status" class="mt-2 text-xs font-bold uppercase tracking-widest text-stone-500 bg-stone-100 px-3 py-1 rounded-full">Half Time</span>
+                            <span id="live-status-text" class="mt-2 text-xs font-bold uppercase tracking-widest text-stone-500 bg-stone-100 px-3 py-1 rounded-full">UPCOMING</span>
                         </div>
-                        <div>
-                            <h3 id="live-team-b" class="text-xl sm:text-2xl font-black text-stone-900 uppercase">Blue House</h3>
-                            <p class="text-xs text-[#8C6D46] font-bold">Hillock</p>
-                        </div>
+                        <div><h3 id="live-team-b" class="text-xl sm:text-2xl font-black text-stone-900 uppercase">Team B</h3><p id="live-house-b" class="text-xs text-[#8C6D46] font-bold">House</p></div>
                     </div>
-
                     <div class="border-t border-stone-100 pt-4 flex justify-between items-center text-xs text-stone-600">
                         <span><i class="fa-solid fa-star text-amber-500"></i> Man of the Match (MVP): <strong id="live-mvp" class="text-stone-900">Pending...</strong></span>
-                        <span id="live-commentary" class="italic text-stone-500">Match in progress...</span>
+                        <span id="live-commentary" class="italic text-stone-500">Awaiting match kickoff...</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. TABLE / STANDINGS -->
+            <!-- TAB 2: TABLE -->
             <div id="section-table" class="hidden space-y-4 animate-fadeIn">
                 <div class="school-card rounded-3xl p-6 sm:p-8 space-y-4">
-                    <h3 class="text-lg font-bold text-[#7A1C2E] flex items-center gap-2">
-                        <i class="fa-solid fa-ranking-star"></i> <span id="table-title">House Points Table</span>
-                    </h3>
+                    <h3 class="text-lg font-bold text-[#7A1C2E] flex items-center gap-2"><i class="fa-solid fa-ranking-star"></i> <span id="table-title">House Points Table</span></h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs sm:text-sm border-collapse">
                             <thead>
@@ -188,45 +139,37 @@
                 </div>
             </div>
 
-            <!-- 3. MATCHES & RESULTS -->
+            <!-- TAB 3: MATCHES & RESULTS -->
             <div id="section-matches" class="hidden space-y-4 animate-fadeIn">
                 <div class="school-card rounded-3xl p-6 sm:p-8 space-y-4">
-                    <h3 class="text-lg font-bold text-[#7A1C2E] flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-days"></i> Match Fixtures & Concluded Results
-                    </h3>
-                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Matches loaded dynamically -->
-                    </div>
+                    <h3 class="text-lg font-bold text-[#7A1C2E] flex items-center gap-2"><i class="fa-solid fa-calendar-days"></i> Match Fixtures & Concluded Results</h3>
+                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
             </div>
 
-            <!-- 4. PLAYER STANDINGS -->
+            <!-- TAB 4: PLAYER STATS -->
             <div id="section-playerStats" class="hidden space-y-4 animate-fadeIn">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="school-card rounded-3xl p-6 space-y-4">
-                        <h3 id="stat-col-1-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Top Scorers (Goals / Runs)</h3>
+                        <h3 id="stat-col-1-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Top Scorers</h3>
                         <div id="stat-col-1-list" class="space-y-3 text-xs"></div>
                     </div>
                     <div class="school-card rounded-3xl p-6 space-y-4">
-                        <h3 id="stat-col-2-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Top Assists / Wickets</h3>
+                        <h3 id="stat-col-2-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Assists / Wickets</h3>
                         <div id="stat-col-2-list" class="space-y-3 text-xs"></div>
                     </div>
                     <div class="school-card rounded-3xl p-6 space-y-4">
-                        <h3 id="stat-col-3-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Defensive / MVP Rating</h3>
+                        <h3 id="stat-col-3-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Fouls / Cards</h3>
                         <div id="stat-col-3-list" class="space-y-3 text-xs"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 5. TEAMS & PLAYERS -->
+            <!-- TAB 5: TEAMS & PLAYERS -->
             <div id="section-teams" class="hidden space-y-4 animate-fadeIn">
                 <div class="school-card rounded-3xl p-6 sm:p-8 space-y-6">
-                    <h3 class="text-lg font-bold text-[#7A1C2E] flex items-center gap-2">
-                        <i class="fa-solid fa-users-rectangle"></i> House Teams & Registered Players Directory
-                    </h3>
-                    <div id="teams-directory-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Teams & players loaded dynamically -->
-                    </div>
+                    <h3 class="text-lg font-bold text-[#7A1C2E] flex items-center gap-2"><i class="fa-solid fa-users-rectangle"></i> House Teams & Registered Players Directory</h3>
+                    <div id="teams-directory-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
             </div>
 
@@ -234,7 +177,6 @@
 
     </main>
 
-    <!-- Footer -->
     <footer class="bg-white border-t border-[#E6D7C3] py-6 mt-12 text-center text-xs sm:text-sm text-stone-500">
         <p>Dunes International School • Inter-House Championship • Academic Session 2026-2027</p>
     </footer>
