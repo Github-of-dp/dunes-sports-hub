@@ -30,7 +30,7 @@ function selectSport(sport) {
     switchSportTab('live');
     loadSportData();
 
-    // Setup Supabase Real-Time Listener for instant updates without refresh
+    // Supabase Real-Time Broadcast Subscriptions (No public page refresh required)
     supabaseClient
         .channel('public-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
@@ -112,7 +112,7 @@ function renderLiveSection() {
     badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-600"></span> Live Stream Active`;
     document.getElementById('live-venue').textContent = liveMatch.venue || 'Main Ground';
     document.getElementById('live-mvp').textContent = liveMatch.mvp_name || 'Pending...';
-    document.getElementById('live-commentary').textContent = liveMatch.commentary || "Match in progress...";
+    document.getElementById('live-commentary').innerHTML = liveMatch.commentary || "Match in progress...";
 
     container.innerHTML = `
         <div><h3 class="text-xl sm:text-2xl font-black text-stone-900 uppercase">${liveMatch.team_a?.name || 'Team A'}</h3><p class="text-xs text-[#8C6D46] font-bold">${liveMatch.team_a?.house || ''}</p></div>
@@ -166,7 +166,7 @@ function renderMatchesSection() {
 function renderPlayerStatsSection() {
     const sorted = [...appData.players].sort((a, b) => b.stat_primary - a.stat_primary);
     
-    document.getElementById('stat-col-1-title').textContent = currentSport === 'football' ? 'Golden Boot (Goals)' : currentSport === 'cricket' ? 'Orange Cap (Runs)' : currentSport === 'volleyball' ? 'Top Spike Points' : 'Top Scorers (Points)';
+    document.getElementById('stat-col-1-title').textContent = currentSport === 'football' ? 'Golden Boot (Goals)' : currentSport === 'cricket' ? 'Orange Cap (Runs)' : currentSport === 'volleyball' ? 'Top Points Scored' : 'Top Scorers (Points)';
     document.getElementById('stat-col-1-list').innerHTML = sorted.slice(0, 5).map((p, i) => `
         <div class="flex justify-between items-center p-2 rounded-xl bg-stone-50 border border-stone-200">
             <div><strong class="text-stone-900">#0${i+1} ${p.name}</strong><span class="block text-[10px] text-stone-500">${p.grade}</span></div>
@@ -183,7 +183,7 @@ function renderPlayerStatsSection() {
         </div>
     `).join('');
 
-    document.getElementById('stat-col-3-title').textContent = 'Player Index';
+    document.getElementById('stat-col-3-title').textContent = 'Player Performance Index';
     document.getElementById('stat-col-3-list').innerHTML = sorted.slice(0, 5).map((p, i) => `
         <div class="flex justify-between items-center p-2 rounded-xl bg-stone-50 border border-stone-200">
             <div><strong class="text-stone-900">${p.name}</strong><span class="block text-[10px] text-stone-500">Active Competitor</span></div>
@@ -195,7 +195,7 @@ function renderPlayerStatsSection() {
 function renderTeamsSection() {
     const container = document.getElementById('teams-directory-container');
     container.innerHTML = appData.teams.map(team => {
-        const teamPlayers = appData.players.filter(p => p.team_id === team.id);
+        const teamPlayers = appData.players.filter(p => p.team_id === team.id).sort((a, b) => a.name.localeCompare(b.name));
         return `
             <div class="bg-stone-50 rounded-2xl p-5 border border-stone-200 space-y-3">
                 <div class="flex justify-between items-center border-b border-stone-200 pb-2">
@@ -219,7 +219,7 @@ let adminSport = 'football';
 
 function verifyAdminPasskey() {
     const passkey = document.getElementById('admin-passkey-input').value;
-    if (passkey === "DUNES2026") {
+    if (passkey === "DIS26") {
         document.getElementById('admin-auth-card').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
         setAdminSport('football');
@@ -303,12 +303,16 @@ async function loadAdminContext() {
         `;
     }).join('');
 
-    if (activeMatchId) selectActiveAdminMatch(activeMatchId);
+    if (activeMatchId) renderActiveMatchControls();
 }
 
 function selectActiveAdminMatch(id) {
     activeMatchId = id;
-    const match = appData.matches.find(m => m.id === id);
+    loadAdminContext();
+}
+
+function renderActiveMatchControls() {
+    const match = appData.matches.find(m => m.id === activeMatchId);
     if (!match) return;
 
     document.getElementById('active-match-control-box').classList.remove('hidden');
@@ -329,19 +333,20 @@ function selectActiveAdminMatch(id) {
         scoringWrapper.style.pointerEvents = "auto";
     }
 
-    const playersA = appData.players.filter(p => p.team_id === match.team_a_id);
-    const playersB = appData.players.filter(p => p.team_id === match.team_b_id);
+    // STRICT ALPHABETICAL ORDERING (Prevents jumpy reordering upon clicks)
+    const playersA = appData.players.filter(p => p.team_id === match.team_a_id).sort((a, b) => a.name.localeCompare(b.name));
+    const playersB = appData.players.filter(p => p.team_id === match.team_b_id).sort((a, b) => a.name.localeCompare(b.name));
 
     document.getElementById('team-a-players-list').innerHTML = playersA.map(p => `
         <div class="flex flex-col gap-1 bg-white p-2 rounded-lg border border-stone-200">
             <div class="flex justify-between items-center text-xs">
-                <span class="font-bold">${p.name}</span>
-                <button onclick="creditPlayerPoint(${match.id}, 'A', ${p.id}, '${p.name}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt</button>
+                <span class="font-bold text-stone-900">${p.name}</span>
+                <button onclick="creditPlayerEvent(${match.id}, 'A', ${p.id}, '${p.name}', 'point')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt</button>
             </div>
             <div class="flex gap-1 text-[10px]">
-                <button onclick="incrementPlayerSecondary(${p.id}, 'block')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Block</button>
-                <button onclick="incrementPlayerSecondary(${p.id}, 'ace')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Ace</button>
-                <span class="ml-auto text-stone-500 font-mono">Blk:${p.stat_secondary || 0}</span>
+                <button onclick="creditPlayerEvent(${match.id}, 'A', ${p.id}, '${p.name}', 'block')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Block</button>
+                <button onclick="creditPlayerEvent(${match.id}, 'A', ${p.id}, '${p.name}', 'ace')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Ace</button>
+                <span class="ml-auto text-stone-500 font-mono">Pts:${p.stat_primary || 0} | B/A:${p.stat_secondary || 0}</span>
             </div>
         </div>
     `).join('') || '<span class="italic text-stone-400">No players in roster.</span>';
@@ -349,13 +354,13 @@ function selectActiveAdminMatch(id) {
     document.getElementById('team-b-players-list').innerHTML = playersB.map(p => `
         <div class="flex flex-col gap-1 bg-white p-2 rounded-lg border border-stone-200">
             <div class="flex justify-between items-center text-xs">
-                <span class="font-bold">${p.name}</span>
-                <button onclick="creditPlayerPoint(${match.id}, 'B', ${p.id}, '${p.name}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt</button>
+                <span class="font-bold text-stone-900">${p.name}</span>
+                <button onclick="creditPlayerEvent(${match.id}, 'B', ${p.id}, '${p.name}', 'point')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt</button>
             </div>
             <div class="flex gap-1 text-[10px]">
-                <button onclick="incrementPlayerSecondary(${p.id}, 'block')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Block</button>
-                <button onclick="incrementPlayerSecondary(${p.id}, 'ace')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Ace</button>
-                <span class="ml-auto text-stone-500 font-mono">Blk:${p.stat_secondary || 0}</span>
+                <button onclick="creditPlayerEvent(${match.id}, 'B', ${p.id}, '${p.name}', 'block')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Block</button>
+                <button onclick="creditPlayerEvent(${match.id}, 'B', ${p.id}, '${p.name}', 'ace')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Ace</button>
+                <span class="ml-auto text-stone-500 font-mono">Pts:${p.stat_primary || 0} | B/A:${p.stat_secondary || 0}</span>
             </div>
         </div>
     `).join('') || '<span class="italic text-stone-400">No players in roster.</span>';
@@ -363,7 +368,7 @@ function selectActiveAdminMatch(id) {
 
 async function adminStartMatch() {
     if (!activeMatchId) return;
-    await supabaseClient.from('matches').update({ status: 'LIVE' }).eq('id', activeMatchId);
+    await supabaseClient.from('matches').update({ status: 'LIVE', commentary: "🚀 Match started! Kickoff underway." }).eq('id', activeMatchId);
     loadAdminContext();
 }
 
@@ -372,7 +377,7 @@ async function adminEndMatch() {
     const match = appData.matches.find(m => m.id === activeMatchId);
     if (!match) return;
 
-    await supabaseClient.from('matches').update({ status: 'COMPLETED' }).eq('id', activeMatchId);
+    await supabaseClient.from('matches').update({ status: 'COMPLETED', commentary: "🏁 Match concluded!" }).eq('id', activeMatchId);
 
     if (match.score_a !== match.score_b) {
         const winnerId = match.score_a > match.score_b ? match.team_a_id : match.team_b_id;
@@ -407,42 +412,80 @@ async function modifyScore(teamLetter, delta) {
     loadAdminContext();
 }
 
-async function creditPlayerPoint(matchId, teamLetter, playerId, playerName) {
+// Single-step point/block/ace crediting with instant commentary push
+async function creditPlayerEvent(matchId, teamLetter, playerId, playerName, eventType) {
     const match = appData.matches.find(m => m.id === matchId);
     let sa = match.score_a;
     let sb = match.score_b;
-    if (teamLetter === 'A') sa += 1;
-    if (teamLetter === 'B') sb += 1;
+    let commentaryText = "";
 
-    const commentaryText = `Point scored by ${playerName} (${teamLetter === 'A' ? match.team_a?.name : match.team_b?.name})`;
+    const teamName = teamLetter === 'A' ? match.team_a?.name : match.team_b?.name;
 
-    // Optimized single-transaction update
+    if (eventType === 'point') {
+        if (teamLetter === 'A') sa += 1;
+        if (teamLetter === 'B') sb += 1;
+        commentaryText = `🔥 <strong>POINT:</strong> ${playerName} scored a point for <strong>${teamName}</strong>!`;
+    } else if (eventType === 'block') {
+        commentaryText = `🛡️ <strong>BLOCK:</strong> ${playerName} recorded a block for <strong>${teamName}</strong>!`;
+    } else if (eventType === 'ace') {
+        commentaryText = `⚡ <strong>ACE:</strong> ${playerName} delivered an ace for <strong>${teamName}</strong>!`;
+    }
+
     await supabaseClient.from('matches').update({
         score_a: sa, score_b: sb, commentary: commentaryText
     }).eq('id', matchId);
 
     const { data: player } = await supabaseClient.from('players').select('*').eq('id', playerId).single();
     if (player) {
-        await supabaseClient.from('players').update({ stat_primary: player.stat_primary + 1 }).eq('id', playerId);
+        if (eventType === 'point') {
+            await supabaseClient.from('players').update({ stat_primary: player.stat_primary + 1 }).eq('id', playerId);
+        } else {
+            await supabaseClient.from('players').update({ stat_secondary: (player.stat_secondary || 0) + 1 }).eq('id', playerId);
+        }
     }
 
     loadAdminContext();
-}
-
-async function incrementPlayerSecondary(playerId, type) {
-    const { data: player } = await supabaseClient.from('players').select('*').eq('id', playerId).single();
-    if (player) {
-        await supabaseClient.from('players').update({ stat_secondary: (player.stat_secondary || 0) + 1 }).eq('id', playerId);
-        loadAdminContext();
-    }
 }
 
 async function saveMvp() {
     if (!activeMatchId) return;
     const mvp = document.getElementById('admin-mvp-input').value;
     await supabaseClient.from('matches').update({ mvp_name: mvp }).eq('id', activeMatchId);
-    alert("MVP saved!");
+    alert("MVP saved successfully!");
     loadAdminContext();
+}
+
+// Export Match Statistics to Excel Spreadsheet (.xlsx)
+function exportMatchToExcel() {
+    if (!activeMatchId) return;
+    const match = appData.matches.find(m => m.id === activeMatchId);
+    if (!match) return;
+
+    const playersA = appData.players.filter(p => p.team_id === match.team_a_id);
+    const playersB = appData.players.filter(p => p.team_id === match.team_b_id);
+
+    const dataRows = [
+        ["DUNES INTERNATIONAL SCHOOL - MATCH STATISTICAL REPORT"],
+        ["Sport", match.sport.toUpperCase()],
+        ["Match ID", match.id],
+        ["Fixture", `${match.team_a?.name} VS ${match.team_b?.name}`],
+        ["Final Score", `${match.score_a} - ${match.score_b}`],
+        ["Status", match.status],
+        ["Venue", match.venue],
+        ["Man of the Match (MVP)", match.mvp_name || 'N/A'],
+        [],
+        ["PLAYER PERFORMANCE BREAKDOWN"],
+        ["Team Name", "Player Name", "Grade", "Points Scored", "Blocks / Aces"]
+    ];
+
+    playersA.forEach(p => dataRows.push([match.team_a?.name, p.name, p.grade, p.stat_primary, p.stat_secondary]));
+    playersB.forEach(p => dataRows.push([match.team_b?.name, p.name, p.grade, p.stat_primary, p.stat_secondary]));
+
+    const worksheet = XLSX.utils.aoa_to_sheet(dataRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Match Statistics");
+
+    XLSX.writeFile(workbook, `Match_${match.id}_${match.team_a?.name}_vs_${match.team_b?.name}.xlsx`);
 }
 
 async function createNewFixture() {
@@ -456,6 +499,13 @@ async function createNewFixture() {
         sport: adminSport, team_a_id, team_b_id, venue, status: 'UPCOMING', score_a: 0, score_b: 0
     }]);
     alert("Fixture created successfully!");
+    loadAdminContext();
+}
+
+async function editFixtureModal(id) {
+    const venue = prompt("Enter new venue / court name:");
+    if (!venue) return;
+    await supabaseClient.from('matches').update({ venue }).eq('id', id);
     loadAdminContext();
 }
 

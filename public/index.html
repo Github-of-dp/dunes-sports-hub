@@ -57,7 +57,7 @@
                 </div>
                 <div onclick="selectSport('volleyball')" class="school-card rounded-3xl p-6 cursor-pointer hover:border-[#7A1C2E] transition-all duration-300 hover:shadow-lg group flex flex-col justify-between space-y-4">
                     <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center text-xl font-bold group-hover:bg-[#7A1C2E] group-hover:text-white transition"><i class="fa-solid fa-volleyball"></i></div>
-                    <div><h3 class="text-lg font-bold text-[#7A1C2E]">Volleyball</h3><p class="text-xs text-stone-600 mt-1">Real-time point scoring, blocks, aces & set standings.</p></div>
+                    <div><h3 class="text-lg font-bold text-[#7A1C2E]">Volleyball</h3><p class="text-xs text-stone-600 mt-1">Instant real-time point scoring, blocks, aces & set standings.</p></div>
                     <span class="text-xs font-bold text-[#7A1C2E] flex items-center gap-1">Open Hub <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                 </div>
                 <div onclick="selectSport('basketball')" class="school-card rounded-3xl p-6 cursor-pointer hover:border-[#7A1C2E] transition-all duration-300 hover:shadow-lg group flex flex-col justify-between space-y-4">
@@ -96,9 +96,18 @@
                         <span id="live-venue" class="text-xs font-mono text-stone-500">Main Ground</span>
                     </div>
                     <div id="live-match-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center"></div>
-                    <div class="border-t border-stone-100 pt-4 flex justify-between items-center text-xs text-stone-600">
+                    
+                    <!-- Highlighted Commentary Banner -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-1">
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-800 flex items-center gap-1">
+                            <i class="fa-solid fa-bolt text-amber-600"></i> Real-Time Live Commentary Event Log
+                        </span>
+                        <div id="live-commentary" class="text-sm font-bold text-stone-800">Awaiting match kickoff...</div>
+                    </div>
+
+                    <div class="border-t border-stone-100 pt-3 flex justify-between items-center text-xs text-stone-600">
                         <span><i class="fa-solid fa-star text-amber-500"></i> Man of the Match (MVP): <strong id="live-mvp" class="text-stone-900">Pending...</strong></span>
-                        <span id="live-commentary" class="italic text-stone-500">Awaiting match kickoff...</span>
+                        <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Instant Stream Syncing</span>
                     </div>
                 </div>
             </div>
@@ -141,11 +150,11 @@
                         <div id="stat-col-1-list" class="space-y-3 text-xs"></div>
                     </div>
                     <div class="school-card rounded-3xl p-6 space-y-4">
-                        <h3 id="stat-col-2-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Blocks & Aces</h3>
+                        <h3 id="stat-col-2-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Blocks & Aces Leaderboard</h3>
                         <div id="stat-col-2-list" class="space-y-3 text-xs"></div>
                     </div>
                     <div class="school-card rounded-3xl p-6 space-y-4">
-                        <h3 id="stat-col-3-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Player Index</h3>
+                        <h3 id="stat-col-3-title" class="text-sm font-bold text-[#7A1C2E] uppercase tracking-wider pb-2 border-b border-stone-100">Player Performance Index</h3>
                         <div id="stat-col-3-list" class="space-y-3 text-xs"></div>
                     </div>
                 </div>

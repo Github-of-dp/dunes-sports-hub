@@ -6,6 +6,8 @@
     <title>Dunes Sports Hub | Admin Control Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS for Excel Generation -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -76,19 +78,22 @@
                 <div id="admin-matches-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
                 <div id="active-match-control-box" class="hidden space-y-6 border-t border-stone-200 pt-6">
-                    <div id="match-scoring-wrapper" class="space-y-6">
-                        <div class="flex justify-between items-center bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                            <div>
-                                <h4 id="active-match-title" class="font-bold text-sm text-stone-900">Match #1</h4>
-                                <p id="active-match-status-label" class="text-xs text-stone-500 font-mono">Status: UPCOMING</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="adminStartMatch()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase transition">Start Match</button>
-                                <button onclick="adminEndMatch()" class="px-4 py-2 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition">End Match</button>
-                            </div>
+                    <div class="flex flex-wrap justify-between items-center bg-stone-50 p-4 rounded-2xl border border-stone-200 gap-3">
+                        <div>
+                            <h4 id="active-match-title" class="font-bold text-sm text-stone-900">Match #1</h4>
+                            <p id="active-match-status-label" class="text-xs text-stone-500 font-mono">Status: UPCOMING</p>
                         </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="adminStartMatch()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase transition">🚀 Start Match</button>
+                            <button onclick="adminEndMatch()" class="px-4 py-2 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition">🏁 End Match</button>
+                            <button onclick="exportMatchToExcel()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs uppercase transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-file-excel"></i> Download Excel Report
+                            </button>
+                        </div>
+                    </div>
 
-                        <!-- Live Scoring Pad with Blocks & Aces -->
+                    <div id="match-scoring-wrapper" class="space-y-6 transition-all duration-300">
+                        <!-- Scoring Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3">
                                 <h5 id="team-a-label" class="font-bold text-sm text-[#7A1C2E]">Team A</h5>
@@ -100,7 +105,7 @@
                                     </div>
                                 </div>
                                 <div class="space-y-1 pt-2 border-t border-stone-200">
-                                    <span class="text-[10px] font-bold uppercase text-stone-400">Team A Roster (Instant Scoring & Blocks/Aces):</span>
+                                    <span class="text-[10px] font-bold uppercase text-stone-400">Team A Roster (Sorted Alphabetically):</span>
                                     <div id="team-a-players-list" class="space-y-1.5 text-xs"></div>
                                 </div>
                             </div>
@@ -115,7 +120,7 @@
                                     </div>
                                 </div>
                                 <div class="space-y-1 pt-2 border-t border-stone-200">
-                                    <span class="text-[10px] font-bold uppercase text-stone-400">Team B Roster (Instant Scoring & Blocks/Aces):</span>
+                                    <span class="text-[10px] font-bold uppercase text-stone-400">Team B Roster (Sorted Alphabetically):</span>
                                     <div id="team-b-players-list" class="space-y-1.5 text-xs"></div>
                                 </div>
                             </div>
@@ -124,7 +129,7 @@
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-stone-600 uppercase">Man of the Match (MVP)</label>
                             <input type="text" id="admin-mvp-input" placeholder="e.g. Aarush Diwakar">
-                            <button onclick="saveMvp()" class="w-full py-2.5 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase">Save MVP</button>
+                            <button onclick="saveMvp()" class="w-full py-2.5 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition">Save MVP</button>
                         </div>
                     </div>
                 </div>
@@ -140,12 +145,12 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Venue / Court</label><input type="text" id="sched-venue" value="Main Court"></div>
-                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Initial Date/Time</label><input type="datetime-local" id="sched-date"></div>
+                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Match Date / Time</label><input type="datetime-local" id="sched-date"></div>
                 </div>
                 <button onclick="createNewFixture()" class="w-full py-3 bg-[#7A1C2E] hover:bg-[#611222] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">➕ Add Match Fixture</button>
 
                 <div class="border-t border-stone-200 pt-4 space-y-3">
-                    <h4 class="text-xs font-bold text-stone-500 uppercase">Existing Fixtures (Click card to alter team name or date)</h4>
+                    <h4 class="text-xs font-bold text-stone-500 uppercase">Existing Fixtures (Click card to edit team name or date)</h4>
                     <div id="existing-fixtures-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                 </div>
             </div>
