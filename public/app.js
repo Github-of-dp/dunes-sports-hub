@@ -29,6 +29,20 @@ function selectSport(sport) {
 
     switchSportTab('live');
     loadSportData();
+
+    // Setup Supabase Real-Time Listener for instant updates without refresh
+    supabaseClient
+        .channel('public-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
+            if (currentSport) loadSportData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => {
+            if (currentSport) loadSportData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => {
+            if (currentSport) loadSportData();
+        })
+        .subscribe();
 }
 
 function backToSelector() {
@@ -161,7 +175,7 @@ function renderPlayerStatsSection() {
     `).join('');
 
     const sortedSec = [...appData.players].sort((a, b) => b.stat_secondary - a.stat_secondary);
-    document.getElementById('stat-col-2-title').textContent = currentSport === 'football' ? 'Top Assists' : currentSport === 'cricket' ? 'Purple Cap (Wickets)' : currentSport === 'volleyball' ? 'Blocks & Aces' : 'Assists';
+    document.getElementById('stat-col-2-title').textContent = currentSport === 'volleyball' ? 'Blocks & Aces' : 'Assists / Wickets';
     document.getElementById('stat-col-2-list').innerHTML = sortedSec.slice(0, 5).map((p, i) => `
         <div class="flex justify-between items-center p-2 rounded-xl bg-stone-50 border border-stone-200">
             <div><strong class="text-stone-900">#0${i+1} ${p.name}</strong><span class="block text-[10px] text-stone-500">${p.grade}</span></div>
@@ -205,7 +219,7 @@ let adminSport = 'football';
 
 function verifyAdminPasskey() {
     const passkey = document.getElementById('admin-passkey-input').value;
-    if (passkey === "DIS26") {
+    if (passkey === "DUNES2026") {
         document.getElementById('admin-auth-card').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
         setAdminSport('football');
@@ -306,31 +320,50 @@ function selectActiveAdminMatch(id) {
     document.getElementById('disp-score-b').textContent = match.score_b;
     document.getElementById('admin-mvp-input').value = match.mvp_name || '';
 
-    // Render roster point buttons for Volleyball/scoring
+    const scoringWrapper = document.getElementById('match-scoring-wrapper');
+    if (match.status === 'COMPLETED') {
+        scoringWrapper.style.opacity = "0.5";
+        scoringWrapper.style.pointerEvents = "none";
+    } else {
+        scoringWrapper.style.opacity = "1";
+        scoringWrapper.style.pointerEvents = "auto";
+    }
+
     const playersA = appData.players.filter(p => p.team_id === match.team_a_id);
     const playersB = appData.players.filter(p => p.team_id === match.team_b_id);
 
     document.getElementById('team-a-players-list').innerHTML = playersA.map(p => `
-        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-stone-200">
-            <span>${p.name}</span>
-            <button onclick="creditPlayerPoint(${match.id}, 'A', ${p.id}, '${p.name}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt & Comment</button>
+        <div class="flex flex-col gap-1 bg-white p-2 rounded-lg border border-stone-200">
+            <div class="flex justify-between items-center text-xs">
+                <span class="font-bold">${p.name}</span>
+                <button onclick="creditPlayerPoint(${match.id}, 'A', ${p.id}, '${p.name}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt</button>
+            </div>
+            <div class="flex gap-1 text-[10px]">
+                <button onclick="incrementPlayerSecondary(${p.id}, 'block')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Block</button>
+                <button onclick="incrementPlayerSecondary(${p.id}, 'ace')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Ace</button>
+                <span class="ml-auto text-stone-500 font-mono">Blk:${p.stat_secondary || 0}</span>
+            </div>
         </div>
     `).join('') || '<span class="italic text-stone-400">No players in roster.</span>';
 
     document.getElementById('team-b-players-list').innerHTML = playersB.map(p => `
-        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-stone-200">
-            <span>${p.name}</span>
-            <button onclick="creditPlayerPoint(${match.id}, 'B', ${p.id}, '${p.name}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt & Comment</button>
+        <div class="flex flex-col gap-1 bg-white p-2 rounded-lg border border-stone-200">
+            <div class="flex justify-between items-center text-xs">
+                <span class="font-bold">${p.name}</span>
+                <button onclick="creditPlayerPoint(${match.id}, 'B', ${p.id}, '${p.name}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt</button>
+            </div>
+            <div class="flex gap-1 text-[10px]">
+                <button onclick="incrementPlayerSecondary(${p.id}, 'block')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Block</button>
+                <button onclick="incrementPlayerSecondary(${p.id}, 'ace')" class="px-2 py-0.5 bg-stone-200 hover:bg-stone-300 rounded font-semibold">+ Ace</button>
+                <span class="ml-auto text-stone-500 font-mono">Blk:${p.stat_secondary || 0}</span>
+            </div>
         </div>
     `).join('') || '<span class="italic text-stone-400">No players in roster.</span>';
-
-    loadAdminContext();
 }
 
 async function adminStartMatch() {
     if (!activeMatchId) return;
     await supabaseClient.from('matches').update({ status: 'LIVE' }).eq('id', activeMatchId);
-    alert("Match started and set to LIVE on public page!");
     loadAdminContext();
 }
 
@@ -341,7 +374,6 @@ async function adminEndMatch() {
 
     await supabaseClient.from('matches').update({ status: 'COMPLETED' }).eq('id', activeMatchId);
 
-    // Compute automatic house points and standings update
     if (match.score_a !== match.score_b) {
         const winnerId = match.score_a > match.score_b ? match.team_a_id : match.team_b_id;
         const loserId = match.score_a > match.score_b ? match.team_b_id : match.team_a_id;
@@ -359,7 +391,7 @@ async function adminEndMatch() {
         }).eq('id', loserId);
     }
 
-    alert("Match ended successfully! Standings and player stats calculated.");
+    alert("Match concluded & standings calculated!");
     loadAdminContext();
 }
 
@@ -372,7 +404,7 @@ async function modifyScore(teamLetter, delta) {
     if (teamLetter === 'B') sb = Math.max(0, sb + delta);
 
     await supabaseClient.from('matches').update({ score_a: sa, score_b: sb }).eq('id', activeMatchId);
-    selectActiveAdminMatch(activeMatchId);
+    loadAdminContext();
 }
 
 async function creditPlayerPoint(matchId, teamLetter, playerId, playerName) {
@@ -384,17 +416,25 @@ async function creditPlayerPoint(matchId, teamLetter, playerId, playerName) {
 
     const commentaryText = `Point scored by ${playerName} (${teamLetter === 'A' ? match.team_a?.name : match.team_b?.name})`;
 
+    // Optimized single-transaction update
     await supabaseClient.from('matches').update({
         score_a: sa, score_b: sb, commentary: commentaryText
     }).eq('id', matchId);
 
-    // Increment player stat primary
     const { data: player } = await supabaseClient.from('players').select('*').eq('id', playerId).single();
     if (player) {
         await supabaseClient.from('players').update({ stat_primary: player.stat_primary + 1 }).eq('id', playerId);
     }
 
-    selectActiveAdminMatch(matchId);
+    loadAdminContext();
+}
+
+async function incrementPlayerSecondary(playerId, type) {
+    const { data: player } = await supabaseClient.from('players').select('*').eq('id', playerId).single();
+    if (player) {
+        await supabaseClient.from('players').update({ stat_secondary: (player.stat_secondary || 0) + 1 }).eq('id', playerId);
+        loadAdminContext();
+    }
 }
 
 async function saveMvp() {
@@ -416,13 +456,6 @@ async function createNewFixture() {
         sport: adminSport, team_a_id, team_b_id, venue, status: 'UPCOMING', score_a: 0, score_b: 0
     }]);
     alert("Fixture created successfully!");
-    loadAdminContext();
-}
-
-async function editFixtureModal(id) {
-    const venue = prompt("Enter new venue / court name:");
-    if (!venue) return;
-    await supabaseClient.from('matches').update({ venue }).eq('id', id);
     loadAdminContext();
 }
 
