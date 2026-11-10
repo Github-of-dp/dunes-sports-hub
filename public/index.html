@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dunes Sports Live Hub | Inter-House Championship</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        dunesBg: '#0b1120',
+                        maroonTheme: '#7A1C2E',
+                        maroonDark: '#611222',
+                        accentGold: '#EAB308',
+                        themeGreen: '#10B981',
+                        themeOrange: '#F97316'
+                    },
+                    boxShadow: {
+                        'neon-maroon': '0 30px 70px -10px rgba(122, 28, 46, 0.25), 0 0 100px -5px rgba(122, 28, 46, 0.12)',
+                        'neon-gold': '0 30px 70px -10px rgba(234, 179, 8, 0.25), 0 0 100px -5px rgba(234, 179, 8, 0.12)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel { backdrop-filter: blur(20px); background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-subcard { backdrop-filter: blur(12px); background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); }
+        input, select, textarea { background-color: #09090c; border: 1px solid rgba(255, 255, 255, 0.1); color: #f3f4f6; border-radius: 12px; padding: 12px; font-size: 14px; outline: none; }
+        input:focus, select:focus { border-color: #7A1C2E; box-shadow: 0 0 12px rgba(122, 28, 46, 0.3); }
+    </style>
+</head>
+<body class="bg-dunesBg text-gray-100 font-sans min-h-screen antialiased p-4 sm:p-6 pb-20 flex flex-col">
+
+    <!-- Header & Navigation -->
+    <header class="max-w-6xl mx-auto w-full mb-8 flex flex-col sm:flex-row justify-between items-center gap-4 glass-panel rounded-2xl p-4 shadow-xl">
+        <div class="flex items-center gap-3">
+            <div class="bg-maroonTheme p-2.5 rounded-xl border border-white/10 shadow-md">
+                <i class="fa-solid fa-volleyball text-amber-300 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                    DUNES SPORTS HUB
+                    <span class="text-[9px] bg-maroonTheme text-amber-200 font-bold px-2 py-0.5 rounded-md uppercase border border-amber-300/30">Volleyball LIVE</span>
+                </h1>
+                <p class="text-[11px] font-semibold text-amber-200/80 uppercase tracking-widest">Inter-House Championship</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <nav class="flex bg-black/50 p-1 rounded-xl border border-white/10 space-x-1">
+                <button onclick="switchTab('live')" id="tab-btn-live" class="text-xs font-bold px-4 py-2 rounded-lg bg-maroonTheme text-white transition shadow">Live Match</button>
+                <button onclick="switchTab('standings')" id="tab-btn-standings" class="text-xs font-bold text-gray-400 px-4 py-2 rounded-lg transition hover:text-white">Standings</button>
+                <button onclick="switchTab('stats')" id="tab-btn-stats" class="text-xs font-bold text-gray-400 px-4 py-2 rounded-lg transition hover:text-white">Player Stats</button>
+            </nav>
+            <button onclick="toggleAdminModal()" class="px-3.5 py-2 rounded-xl bg-maroonTheme/20 hover:bg-maroonTheme/40 text-amber-300 border border-maroonTheme/40 text-xs font-bold transition flex items-center gap-2">
+                <i class="fa-solid fa-lock text-xs"></i> Admin
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto w-full flex-1 space-y-6">
+        
+        <!-- LIVE MATCH SECTION -->
+        <section id="section-live" class="tab-content space-y-6">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 shadow-neon-maroon border-l-4 border-l-maroonTheme relative overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="flex items-center gap-2 text-[10px] font-bold text-amber-300 uppercase tracking-widest bg-maroonTheme/30 px-3 py-1.5 rounded-full border border-maroonTheme/50">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Live Court Stream
+                    </span>
+                    <span id="live-court" class="text-xs font-mono font-bold text-gray-400">Main Court</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center md:text-left">
+                    <div>
+                        <h2 id="team-a-name" class="text-2xl sm:text-3xl font-black text-white uppercase">Red House</h2>
+                        <p class="text-xs text-amber-200 font-semibold tracking-wider uppercase mt-1">Team A (Ridge)</p>
+                    </div>
+                    
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="flex items-baseline gap-3">
+                            <span id="team-a-sets" class="text-6xl font-black font-mono text-amber-400">2</span>
+                            <span class="text-3xl font-light text-gray-600">-</span>
+                            <span id="team-b-sets" class="text-6xl font-black font-mono text-white">1</span>
+                        </div>
+                        <span id="match-status-badge" class="mt-2 text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">LIVE SET 3</span>
+                    </div>
+
+                    <div class="md:text-right">
+                        <h2 id="team-b-name" class="text-2xl sm:text-3xl font-black text-white uppercase">Blue House</h2>
+                        <p class="text-xs text-amber-200 font-semibold tracking-wider uppercase mt-1">Team B (Hillock)</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-white/10 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
+                    <div class="flex items-center gap-2 text-amber-200">
+                        <i class="fa-solid fa-star text-amber-400"></i>
+                        <span>Match MVP Contender: <strong id="live-mvp" class="text-white">Aarush Diwakar</strong></span>
+                    </div>
+                    <span id="match-date-display" class="text-gray-400 font-mono">Championship Match #1</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- STANDINGS SECTION -->
+        <section id="section-standings" class="tab-content space-y-4 hidden">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 shadow-xl border-l-4 border-l-maroonTheme">
+                <h3 class="text-xs font-black tracking-wider text-amber-300 uppercase mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-ranking-star"></i> Inter-House Volleyball Standings
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-white/10 text-[10px] font-black text-gray-400 tracking-widest uppercase">
+                                <th class="pb-3 pl-2">House Team</th>
+                                <th class="pb-3 text-center">Played</th>
+                                <th class="pb-3 text-center">Won</th>
+                                <th class="pb-3 text-center">Lost</th>
+                                <th class="pb-3 text-center">Sets Won</th>
+                                <th class="pb-3 text-center">Sets Lost</th>
+                                <th class="pb-3 text-center text-amber-400">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-tbody" class="divide-y divide-white/5 font-semibold"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PLAYER STATS SECTION -->
+        <section id="section-stats" class="tab-content space-y-4 hidden">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 shadow-xl border-l-4 border-l-maroonTheme">
+                <h3 class="text-xs font-black tracking-wider text-amber-300 uppercase mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy"></i> Top Volleyball Performers Leaderboard
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-white/10 text-[10px] font-black text-gray-400 tracking-widest uppercase">
+                                <th class="pb-3 pl-2">Player Name</th>
+                                <th class="pb-3 px-3">Grade</th>
+                                <th class="pb-3 text-center text-amber-400">Spike Points</th>
+                                <th class="pb-3 text-center">Blocks</th>
+                                <th class="pb-3 text-center">Aces</th>
+                            </tr>
+                        </thead>
+                        <tbody id="players-tbody" class="divide-y divide-white/5 font-semibold"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel max-w-md w-full rounded-3xl p-6 sm:p-8 space-y-5 border-t-8 border-maroonTheme">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <h3 class="font-bold text-base text-amber-300 uppercase tracking-wider">Admin Scorer Portal</h3>
+                <button onclick="toggleAdminModal()" class="text-gray-400 hover:text-white text-lg">&times;</button>
+            </div>
+            
+            <div id="admin-auth" class="space-y-3">
+                <label class="block text-xs uppercase font-bold text-gray-400">Enter Admin Passkey</label>
+                <input type="password" id="admin-passkey" placeholder="Passkey (default: DUNES2026)" class="w-full">
+                <button onclick="authenticateAdmin()" class="w-full py-3 bg-maroonTheme hover:bg-maroonDark text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">Authenticate</button>
+            </div>
+
+            <div id="admin-controls" class="hidden space-y-4 text-xs">
+                <p class="text-green-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Successfully Authenticated</p>
+                <div class="space-y-3 pt-2">
+                    <label class="block font-bold text-gray-300">Select Active Match to Update</label>
+                    <select id="admin-match-select" class="w-full"></select>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Team A Sets</label>
+                            <input type="number" id="admin-team-a-sets" value="0" class="w-full">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Team B Sets</label>
+                            <input type="number" id="admin-team-b-sets" value="0" class="w-full">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-400 mb-1">Match Status</label>
+                        <select id="admin-match-status" class="w-full">
+                            <option value="LIVE">LIVE</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="UPCOMING">UPCOMING</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-400 mb-1">Match MVP Name</label>
+                        <input type="text" id="admin-mvp" placeholder="e.g. Aarush Diwakar" class="w-full">
+                    </div>
+
+                    <button onclick="saveMatchUpdate()" class="w-full py-3 bg-maroonTheme hover:bg-maroonDark text-white font-bold rounded-xl uppercase tracking-wider transition shadow">Update Live Scorecard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

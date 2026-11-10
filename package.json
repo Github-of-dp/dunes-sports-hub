@@ -1,0 +1,8 @@
+{
+  "name": "dunes-sports-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "echo 'Static app deployed on Vercel'"
+  }
+}
