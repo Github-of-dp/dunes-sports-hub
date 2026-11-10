@@ -4,6 +4,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 let currentSport = null;
 let appData = { teams: [], players: [], matches: [] };
+let activeMatchId = null;
 
 // --- PUBLIC PORTAL LOGIC ---
 function selectSport(sport) {
@@ -74,31 +75,43 @@ async function loadSportData() {
 }
 
 function renderLiveSection() {
-    const liveMatch = appData.matches.find(m => m.status === 'LIVE') || appData.matches[0];
-    if (!liveMatch) return;
+    const liveMatch = appData.matches.find(m => m.status === 'LIVE');
+    const container = document.getElementById('live-match-container');
+    const badge = document.getElementById('live-badge');
 
-    document.getElementById('live-team-a').textContent = liveMatch.team_a?.name || 'Team A';
-    document.getElementById('live-house-a').textContent = liveMatch.team_a?.house || '';
-    document.getElementById('live-team-b').textContent = liveMatch.team_b?.name || 'Team B';
-    document.getElementById('live-house-b').textContent = liveMatch.team_b?.house || '';
-    document.getElementById('live-score-a').textContent = liveMatch.score_a;
-    document.getElementById('live-score-b').textContent = liveMatch.score_b;
+    if (!liveMatch) {
+        badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-200 text-stone-700 text-xs font-bold";
+        badge.innerHTML = `<i class="fa-solid fa-circle-info"></i> No Live Match Currently`;
+        container.innerHTML = `
+            <div class="col-span-3 py-12 text-center text-stone-400 space-y-2">
+                <i class="fa-solid fa-tv text-3xl"></i>
+                <p class="text-sm font-semibold">No matches are currently ongoing for ${currentSport.toUpperCase()}. Check schedule for upcoming games.</p>
+            </div>
+        `;
+        document.getElementById('live-venue').textContent = "Main Ground";
+        document.getElementById('live-mvp').textContent = "Pending...";
+        document.getElementById('live-commentary').textContent = "Awaiting match kickoff...";
+        return;
+    }
+
+    badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold animate-pulse";
+    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-600"></span> Live Stream Active`;
     document.getElementById('live-venue').textContent = liveMatch.venue || 'Main Ground';
     document.getElementById('live-mvp').textContent = liveMatch.mvp_name || 'Pending...';
-    
-    const statusText = document.getElementById('live-status-text');
-    const badge = document.getElementById('live-badge');
-    statusText.textContent = liveMatch.status;
-    if (liveMatch.status === 'LIVE') {
-        badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold animate-pulse";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-600"></span> Live Stream Active`;
-    } else if (liveMatch.status === 'COMPLETED') {
-        badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-200 text-stone-700 text-xs font-bold";
-        badge.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Match Concluded`;
-    } else {
-        badge.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold";
-        badge.innerHTML = `<i class="fa-solid fa-clock"></i> Upcoming Fixture`;
-    }
+    document.getElementById('live-commentary').textContent = liveMatch.commentary || "Match in progress...";
+
+    container.innerHTML = `
+        <div><h3 class="text-xl sm:text-2xl font-black text-stone-900 uppercase">${liveMatch.team_a?.name || 'Team A'}</h3><p class="text-xs text-[#8C6D46] font-bold">${liveMatch.team_a?.house || ''}</p></div>
+        <div class="flex flex-col items-center justify-center">
+            <div class="flex items-baseline gap-3">
+                <span class="text-5xl font-black text-[#7A1C2E] font-mono">${liveMatch.score_a}</span>
+                <span class="text-2xl font-light text-stone-400">-</span>
+                <span class="text-5xl font-black text-stone-900 font-mono">${liveMatch.score_b}</span>
+            </div>
+            <span class="mt-2 text-xs font-bold uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1 rounded-full animate-pulse">ONGOING LIVE</span>
+        </div>
+        <div><h3 class="text-xl sm:text-2xl font-black text-stone-900 uppercase">${liveMatch.team_b?.name || 'Team B'}</h3><p class="text-xs text-[#8C6D46] font-bold">${liveMatch.team_b?.house || ''}</p></div>
+    `;
 }
 
 function renderStandingsSection() {
@@ -156,11 +169,11 @@ function renderPlayerStatsSection() {
         </div>
     `).join('');
 
-    document.getElementById('stat-col-3-title').textContent = 'Fouls / Discipline';
+    document.getElementById('stat-col-3-title').textContent = 'Player Index';
     document.getElementById('stat-col-3-list').innerHTML = sorted.slice(0, 5).map((p, i) => `
         <div class="flex justify-between items-center p-2 rounded-xl bg-stone-50 border border-stone-200">
-            <div><strong class="text-stone-900">${p.name}</strong><span class="block text-[10px] text-stone-500">Clean Play</span></div>
-            <span class="font-bold text-emerald-600"><i class="fa-solid fa-shield text-[10px]"></i> Active</span>
+            <div><strong class="text-stone-900">${p.name}</strong><span class="block text-[10px] text-stone-500">Active Competitor</span></div>
+            <span class="font-bold text-amber-600"><i class="fa-solid fa-star text-amber-500 text-[10px]"></i> 9.${i}</span>
         </div>
     `).join('');
 }
@@ -178,7 +191,7 @@ function renderTeamsSection() {
                 <div class="space-y-1 text-xs">
                     <span class="text-[10px] font-bold uppercase text-stone-400">Squad Members:</span>
                     <div class="grid grid-cols-2 gap-1 text-stone-700">
-                        ${teamPlayers.length ? teamPlayers.map(p => `<div>• ${p.name} (${p.grade})</div>`).join('') : '<span class="italic text-stone-400">Players registering soon...</span>'}
+                        ${teamPlayers.length ? teamPlayers.map(p => `<div>• ${p.name} (${p.grade})</div>`).join('') : '<span class="italic text-stone-400">No players registered.</span>'}
                     </div>
                 </div>
             </div>
@@ -188,187 +201,248 @@ function renderTeamsSection() {
 
 
 // --- ADMIN PORTAL LOGIC ---
+let adminSport = 'football';
+
 function verifyAdminPasskey() {
     const passkey = document.getElementById('admin-passkey-input').value;
-    if (passkey === "DUNES2026") {
+    if (passkey === "DIS26") {
         document.getElementById('admin-auth-card').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
-        loadAdminSportContext();
+        setAdminSport('football');
     } else {
         alert("Incorrect Passkey!");
     }
 }
 
-function switchAdminTab(tab) {
-    if (tab === 'data') {
-        document.getElementById('admin-section-data').classList.remove('hidden');
-        document.getElementById('admin-section-schedule').classList.add('hidden');
-        document.getElementById('admin-tab-data').className = "flex-1 py-3 rounded-xl font-bold text-xs bg-[#7A1C2E] text-white transition";
-        document.getElementById('admin-tab-schedule').className = "flex-1 py-3 rounded-xl font-semibold text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 transition";
-    } else {
-        document.getElementById('admin-section-schedule').classList.remove('hidden');
-        document.getElementById('admin-section-data').classList.add('hidden');
-        document.getElementById('admin-tab-schedule').className = "flex-1 py-3 rounded-xl font-bold text-xs bg-[#7A1C2E] text-white transition";
-        document.getElementById('admin-tab-data').className = "flex-1 py-3 rounded-xl font-semibold text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 transition";
-        loadScheduleManager();
-    }
+function setAdminSport(sport) {
+    adminSport = sport;
+    ['football', 'cricket', 'volleyball', 'basketball'].forEach(s => {
+        const card = document.getElementById(`scard-${s}`);
+        if (s === sport) {
+            card.className = "p-4 rounded-2xl border-2 border-[#7A1C2E] bg-[#7A1C2E]/5 cursor-pointer text-center font-bold text-xs uppercase text-[#7A1C2E]";
+        } else {
+            card.className = "p-4 rounded-2xl border border-stone-200 cursor-pointer text-center font-bold text-xs uppercase transition hover:border-[#7A1C2E]";
+        }
+    });
+    loadAdminContext();
 }
 
-async function loadAdminSportContext() {
-    const sport = document.getElementById('admin-sport-select').value;
+function switchAdminTab(tab) {
+    ['data', 'schedule', 'players'].forEach(t => {
+        const sec = document.getElementById(`admin-section-${t}`);
+        const btn = document.getElementById(`admin-tab-${t}`);
+        if (t === tab) {
+            sec.classList.remove('hidden');
+            btn.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-[#7A1C2E] text-white transition";
+        } else {
+            sec.classList.add('hidden');
+            btn.className = "flex-1 py-3 rounded-xl font-semibold text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 transition";
+        }
+    });
+    loadAdminContext();
+}
+
+async function loadAdminContext() {
     const { data: matches } = await supabaseClient.from('matches').select(`
-        *,
-        team_a:teams!matches_team_a_id_fkey(name),
-        team_b:teams!matches_team_b_id_fkey(name)
-    `).eq('sport', sport).order('id', { ascending: true });
+        *, team_a:teams!matches_team_a_id_fkey(name), team_b:teams!matches_team_b_id_fkey(name)
+    `).eq('sport', adminSport).order('id', { ascending: true });
 
-    const { data: players } = await supabaseClient.from('players').select('*').eq('sport', sport);
+    const { data: teams } = await supabaseClient.from('teams').select('*').eq('sport', adminSport);
+    const { data: players } = await supabaseClient.from('players').select('*').eq('sport', adminSport);
 
-    const matchSelect = document.getElementById('admin-match-select');
-    matchSelect.innerHTML = (matches || []).map(m => `
-        <option value="${m.id}" data-sa="${m.score_a}" data-sb="${m.score_b}" data-status="${m.status}" data-mvp="${m.mvp_name || ''}">
-            Match #${m.id}: ${m.team_a?.name} vs ${m.team_b?.name} (${m.status})
-        </option>
+    appData = { teams: teams || [], players: players || [], matches: matches || [] };
+
+    // Render Admin Match Cards Grid
+    const grid = document.getElementById('admin-matches-cards-grid');
+    grid.innerHTML = (matches || []).map(m => `
+        <div onclick="selectActiveAdminMatch(${m.id})" class="p-4 rounded-2xl border-2 cursor-pointer transition ${activeMatchId === m.id ? 'border-[#7A1C2E] bg-[#7A1C2E]/5' : 'border-stone-200 hover:border-stone-400'}">
+            <div class="flex justify-between items-center text-xs mb-1">
+                <span class="font-bold text-[#7A1C2E]">Match #${m.id}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${m.status === 'LIVE' ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-stone-200 text-stone-700'}">${m.status}</span>
+            </div>
+            <div class="font-bold text-sm text-stone-900">${m.team_a?.name} vs ${m.team_b?.name}</div>
+            <div class="text-xs font-mono text-stone-600 mt-1">Score: ${m.score_a} - ${m.score_b}</div>
+        </div>
     `).join('');
 
-    const playerSelect = document.getElementById('admin-player-select');
-    playerSelect.innerHTML = (players || []).map(p => `<option value="${p.id}">${p.name} (${p.grade})</option>`).join('');
+    // Populate Schedule Manager
+    const optHtml = teams.map(t => `<option value="${t.id}">${t.name} (${t.house})</option>`).join('');
+    document.getElementById('sched-team-a').innerHTML = optHtml;
+    document.getElementById('sched-team-b').innerHTML = optHtml;
+    document.getElementById('player-team-select').innerHTML = optHtml;
 
-    populateMatchControls();
+    document.getElementById('existing-fixtures-cards').innerHTML = matches.map(m => `
+        <div onclick="editFixtureModal(${m.id})" class="p-3 rounded-xl bg-stone-50 border border-stone-200 cursor-pointer hover:border-[#7A1C2E]">
+            <div class="text-xs font-bold text-stone-900">Match #${m.id}: ${m.team_a?.name} vs ${m.team_b?.name}</div>
+            <div class="text-[10px] text-stone-500">Venue: ${m.venue} | Status: ${m.status}</div>
+        </div>
+    `).join('');
+
+    // Populate Player Manager List
+    document.getElementById('admin-players-list').innerHTML = players.map(p => {
+        const tObj = teams.find(t => t.id === p.team_id);
+        return `
+            <div class="flex justify-between items-center p-2 rounded-xl bg-stone-50 border border-stone-200">
+                <span>${p.name} (${p.grade}) - <strong class="text-[#7A1C2E]">${tObj?.name || 'Team'}</strong></span>
+                <button onclick="removePlayer(${p.id})" class="text-rose-600 font-bold hover:underline">Remove</button>
+            </div>
+        `;
+    }).join('');
+
+    if (activeMatchId) selectActiveAdminMatch(activeMatchId);
 }
 
-function populateMatchControls() {
-    const select = document.getElementById('admin-match-select');
-    const opt = select.options[select.selectedIndex];
-    if (!opt) return;
-
-    document.getElementById('admin-score-a').value = opt.getAttribute('data-sa');
-    document.getElementById('admin-score-b').value = opt.getAttribute('data-sb');
-    document.getElementById('admin-mvp').value = opt.getAttribute('data-mvp');
-    
-    const status = opt.getAttribute('data-status');
-    const panel = document.getElementById('match-control-panel');
-    if (status === 'COMPLETED') {
-        panel.style.opacity = "0.5";
-        panel.style.pointerEvents = "none";
-    } else {
-        panel.style.opacity = "1";
-        panel.style.pointerEvents = "auto";
-    }
-}
-
-async function startMatch() {
-    const matchId = document.getElementById('admin-match-select').value;
-    await supabaseClient.from('matches').update({ status: 'LIVE' }).eq('id', matchId);
-    alert("Match started & set to LIVE!");
-    loadAdminSportContext();
-}
-
-async function endMatch() {
-    const matchId = document.getElementById('admin-match-select').value;
-    const sport = document.getElementById('admin-sport-select').value;
-
-    // Fetch match details to compute standings points
-    const { data: match } = await supabaseClient.from('matches').select('*').eq('id', matchId).single();
+function selectActiveAdminMatch(id) {
+    activeMatchId = id;
+    const match = appData.matches.find(m => m.id === id);
     if (!match) return;
 
-    const scoreA = parseInt(document.getElementById('admin-score-a').value) || 0;
-    const scoreB = parseInt(document.getElementById('admin-score-b').value) || 0;
+    document.getElementById('active-match-control-box').classList.remove('hidden');
+    document.getElementById('active-match-title').textContent = `Match #${match.id}: ${match.team_a?.name} vs ${match.team_b?.name}`;
+    document.getElementById('active-match-status-label').textContent = `Status: ${match.status}`;
+    document.getElementById('team-a-label').textContent = match.team_a?.name || 'Team A';
+    document.getElementById('team-b-label').textContent = match.team_b?.name || 'Team B';
+    document.getElementById('disp-score-a').textContent = match.score_a;
+    document.getElementById('disp-score-b').textContent = match.score_b;
+    document.getElementById('admin-mvp-input').value = match.mvp_name || '';
 
-    await supabaseClient.from('matches').update({ status: 'COMPLETED', score_a: scoreA, score_b: scoreB }).eq('id', matchId);
+    // Render roster point buttons for Volleyball/scoring
+    const playersA = appData.players.filter(p => p.team_id === match.team_a_id);
+    const playersB = appData.players.filter(p => p.team_id === match.team_b_id);
 
-    // Automatic Standings Calculation Logic
-    if (scoreA !== scoreB) {
-        const winnerId = scoreA > scoreB ? match.team_a_id : match.team_b_id;
-        const loserId = scoreA > scoreB ? match.team_b_id : match.team_a_id;
+    document.getElementById('team-a-players-list').innerHTML = playersA.map(p => `
+        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-stone-200">
+            <span>${p.name}</span>
+            <button onclick="creditPlayerPoint(${match.id}, 'A', ${p.id}, '${p.name}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt & Comment</button>
+        </div>
+    `).join('') || '<span class="italic text-stone-400">No players in roster.</span>';
 
-        // Update Winner
+    document.getElementById('team-b-players-list').innerHTML = playersB.map(p => `
+        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-stone-200">
+            <span>${p.name}</span>
+            <button onclick="creditPlayerPoint(${match.id}, 'B', ${p.id}, '${p.name}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-[10px]">+1 Pt & Comment</button>
+        </div>
+    `).join('') || '<span class="italic text-stone-400">No players in roster.</span>';
+
+    loadAdminContext();
+}
+
+async function adminStartMatch() {
+    if (!activeMatchId) return;
+    await supabaseClient.from('matches').update({ status: 'LIVE' }).eq('id', activeMatchId);
+    alert("Match started and set to LIVE on public page!");
+    loadAdminContext();
+}
+
+async function adminEndMatch() {
+    if (!activeMatchId) return;
+    const match = appData.matches.find(m => m.id === activeMatchId);
+    if (!match) return;
+
+    await supabaseClient.from('matches').update({ status: 'COMPLETED' }).eq('id', activeMatchId);
+
+    // Compute automatic house points and standings update
+    if (match.score_a !== match.score_b) {
+        const winnerId = match.score_a > match.score_b ? match.team_a_id : match.team_b_id;
+        const loserId = match.score_a > match.score_b ? match.team_b_id : match.team_a_id;
+
         const { data: winTeam } = await supabaseClient.from('teams').select('*').eq('id', winnerId).single();
         await supabaseClient.from('teams').update({
-            played: winTeam.played + 1,
-            won: winTeam.won + 1,
-            points: winTeam.points + 3,
-            extra_metric: winTeam.extra_metric + Math.abs(scoreA - scoreB)
+            played: winTeam.played + 1, won: winTeam.won + 1, points: winTeam.points + 3,
+            extra_metric: winTeam.extra_metric + Math.abs(match.score_a - match.score_b)
         }).eq('id', winnerId);
 
-        // Update Loser
         const { data: loseTeam } = await supabaseClient.from('teams').select('*').eq('id', loserId).single();
         await supabaseClient.from('teams').update({
-            played: loseTeam.played + 1,
-            lost: loseTeam.lost + 1,
-            extra_metric: loseTeam.extra_metric - Math.abs(scoreA - scoreB)
+            played: loseTeam.played + 1, lost: loseTeam.lost + 1,
+            extra_metric: loseTeam.extra_metric - Math.abs(match.score_a - match.score_b)
         }).eq('id', loserId);
     }
 
-    alert("Match concluded & standings/points calculated automatically!");
-    loadAdminSportContext();
+    alert("Match ended successfully! Standings and player stats calculated.");
+    loadAdminContext();
 }
 
-async function recordMatchEvent() {
-    const team = document.getElementById('admin-event-team').value;
-    const inputId = team === 'A' ? 'admin-score-a' : 'admin-score-b';
-    const input = document.getElementById(inputId);
-    input.value = parseInt(input.value || 0) + 1;
+async function modifyScore(teamLetter, delta) {
+    if (!activeMatchId) return;
+    const match = appData.matches.find(m => m.id === activeMatchId);
+    let sa = match.score_a;
+    let sb = match.score_b;
+    if (teamLetter === 'A') sa = Math.max(0, sa + delta);
+    if (teamLetter === 'B') sb = Math.max(0, sb + delta);
+
+    await supabaseClient.from('matches').update({ score_a: sa, score_b: sb }).eq('id', activeMatchId);
+    selectActiveAdminMatch(activeMatchId);
 }
 
-async function incrementPlayerStat() {
-    const playerId = document.getElementById('admin-player-select').value;
+async function creditPlayerPoint(matchId, teamLetter, playerId, playerName) {
+    const match = appData.matches.find(m => m.id === matchId);
+    let sa = match.score_a;
+    let sb = match.score_b;
+    if (teamLetter === 'A') sa += 1;
+    if (teamLetter === 'B') sb += 1;
+
+    const commentaryText = `Point scored by ${playerName} (${teamLetter === 'A' ? match.team_a?.name : match.team_b?.name})`;
+
+    await supabaseClient.from('matches').update({
+        score_a: sa, score_b: sb, commentary: commentaryText
+    }).eq('id', matchId);
+
+    // Increment player stat primary
     const { data: player } = await supabaseClient.from('players').select('*').eq('id', playerId).single();
-    if (!player) return;
+    if (player) {
+        await supabaseClient.from('players').update({ stat_primary: player.stat_primary + 1 }).eq('id', playerId);
+    }
 
-    await supabaseClient.from('players').update({ stat_primary: player.stat_primary + 1 }).eq('id', playerId);
-    alert(`Incremented stat for ${player.name}!`);
+    selectActiveAdminMatch(matchId);
 }
 
-async function commitLiveMatchUpdate() {
-    const matchId = document.getElementById('admin-match-select').value;
-    const score_a = parseInt(document.getElementById('admin-score-a').value) || 0;
-    const score_b = parseInt(document.getElementById('admin-score-b').value) || 0;
-    const mvp_name = document.getElementById('admin-mvp').value;
-
-    const { error } = await supabaseClient.from('matches').update({ score_a, score_b, mvp_name }).eq('id', matchId);
-    if (error) alert("Error: " + error.message);
-    else alert("Live scorecard updated successfully!");
-}
-
-async function loadScheduleManager() {
-    const sport = document.getElementById('admin-sport-select').value;
-    const { data: teams } = await supabaseClient.from('teams').select('*').eq('sport', sport);
-    const { data: matches } = await supabaseClient.from('matches').select(`
-        *, team_a:teams!matches_team_a_id_fkey(name), team_b:teams!matches_team_b_id_fkey(name)
-    `).eq('sport', sport);
-
-    const optHtml = (teams || []).map(t => `<option value="${t.id}">${t.name} (${t.house})</option>`).join('');
-    document.getElementById('sched-team-a').innerHTML = optHtml;
-    document.getElementById('sched-team-b').innerHTML = optHtml;
-
-    document.getElementById('existing-fixtures-list').innerHTML = (matches || []).map(m => `
-        <div class="flex justify-between items-center p-2 rounded-xl bg-stone-50 border border-stone-200">
-            <span>Match #${m.id}: ${m.team_a?.name} vs ${m.team_b?.name} (${m.status})</span>
-            <button onclick="deleteFixture(${m.id})" class="text-rose-600 font-bold hover:underline">Delete</button>
-        </div>
-    `).join('');
+async function saveMvp() {
+    if (!activeMatchId) return;
+    const mvp = document.getElementById('admin-mvp-input').value;
+    await supabaseClient.from('matches').update({ mvp_name: mvp }).eq('id', activeMatchId);
+    alert("MVP saved!");
+    loadAdminContext();
 }
 
 async function createNewFixture() {
-    const sport = document.getElementById('admin-sport-select').value;
     const team_a_id = document.getElementById('sched-team-a').value;
     const team_b_id = document.getElementById('sched-team-b').value;
     const venue = document.getElementById('sched-venue').value;
-    const status = document.getElementById('sched-status').value;
 
-    if (team_a_id === team_b_id) {
-        alert("Team A and Team B cannot be the same!");
-        return;
-    }
+    if (team_a_id === team_b_id) { alert("Team A and Team B cannot be identical."); return; }
 
-    const { error } = await supabaseClient.from('matches').insert([{ sport, team_a_id, team_b_id, venue, status, score_a: 0, score_b: 0 }]);
-    if (error) alert("Error: " + error.message);
-    else { alert("New fixture created!"); loadScheduleManager(); }
+    await supabaseClient.from('matches').insert([{
+        sport: adminSport, team_a_id, team_b_id, venue, status: 'UPCOMING', score_a: 0, score_b: 0
+    }]);
+    alert("Fixture created successfully!");
+    loadAdminContext();
 }
 
-async function deleteFixture(id) {
-    if (!confirm("Delete this fixture?")) return;
-    await supabaseClient.from('matches').delete().eq('id', id);
-    loadScheduleManager();
+async function editFixtureModal(id) {
+    const venue = prompt("Enter new venue / court name:");
+    if (!venue) return;
+    await supabaseClient.from('matches').update({ venue }).eq('id', id);
+    loadAdminContext();
+}
+
+async function addNewPlayer() {
+    const team_id = document.getElementById('player-team-select').value;
+    const name = document.getElementById('new-player-name').value;
+    const grade = document.getElementById('new-player-grade').value;
+
+    if (!name) { alert("Enter player name."); return; }
+
+    await supabaseClient.from('players').insert([{
+        sport: adminSport, team_id, name, grade, stat_primary: 0, stat_secondary: 0
+    }]);
+    alert("Player registered successfully!");
+    document.getElementById('new-player-name').value = '';
+    loadAdminContext();
+}
+
+async function removePlayer(id) {
+    if (!confirm("Remove this player?")) return;
+    await supabaseClient.from('players').delete().eq('id', id);
+    loadAdminContext();
 }

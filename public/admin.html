@@ -32,9 +32,9 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-8">
+    <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-8">
         
-        <!-- Authentication Card (Hidden passkey hint) -->
+        <!-- Authentication Card (No Passkey Hint) -->
         <div id="admin-auth-card" class="school-card rounded-3xl p-8 space-y-6 max-w-md mx-auto mt-12 border-t-8 border-[#7A1C2E]">
             <div class="text-center space-y-2">
                 <div class="w-12 h-12 rounded-2xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center mx-auto text-lg font-bold"><i class="fa-solid fa-lock"></i></div>
@@ -52,91 +52,118 @@
         <!-- Admin Command Center Dashboard -->
         <div id="admin-dashboard" class="hidden space-y-6">
             
-            <!-- Sport Selector Step -->
+            <!-- Sport Selector Cards -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 school-card space-y-4 border-l-8 border-[#7A1C2E]">
                 <h2 class="text-base font-bold text-[#7A1C2E]">1. Select Sport Context</h2>
-                <select id="admin-sport-select" onchange="loadAdminSportContext()">
-                    <option value="football">Football</option>
-                    <option value="cricket">Cricket</option>
-                    <option value="volleyball">Volleyball</option>
-                    <option value="basketball">Basketball</option>
-                </select>
+                <div id="sport-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div onclick="setAdminSport('football')" id="scard-football" class="p-4 rounded-2xl border border-stone-200 cursor-pointer text-center font-bold text-xs uppercase transition hover:border-[#7A1C2E]">Football</div>
+                    <div onclick="setAdminSport('cricket')" id="scard-cricket" class="p-4 rounded-2xl border border-stone-200 cursor-pointer text-center font-bold text-xs uppercase transition hover:border-[#7A1C2E]">Cricket</div>
+                    <div onclick="setAdminSport('volleyball')" id="scard-volleyball" class="p-4 rounded-2xl border border-stone-200 cursor-pointer text-center font-bold text-xs uppercase transition hover:border-[#7A1C2E]">Volleyball</div>
+                    <div onclick="setAdminSport('basketball')" id="scard-basketball" class="p-4 rounded-2xl border border-stone-200 cursor-pointer text-center font-bold text-xs uppercase transition hover:border-[#7A1C2E]">Basketball</div>
+                </div>
             </div>
 
-            <!-- Admin Sub-tabs: Match Data vs Schedule Manager -->
+            <!-- Admin Sub-tabs -->
             <div class="bg-white border border-[#E6D7C3] rounded-2xl p-2 shadow-sm flex gap-2">
-                <button onclick="switchAdminTab('data')" id="admin-tab-data" class="flex-1 py-3 rounded-xl font-bold text-xs bg-[#7A1C2E] text-white transition">⚡ Match Data & Live Control</button>
-                <button onclick="switchAdminTab('schedule')" id="admin-tab-schedule" class="flex-1 py-3 rounded-xl font-semibold text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 transition">📅 Schedule & Fixtures Manager</button>
+                <button onclick="switchAdminTab('data')" id="admin-tab-data" class="flex-1 py-3 rounded-xl font-bold text-xs bg-[#7A1C2E] text-white transition">⚡ Match Data & Scoring</button>
+                <button onclick="switchAdminTab('schedule')" id="admin-tab-schedule" class="flex-1 py-3 rounded-xl font-semibold text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 transition">📅 Schedule & Fixtures</button>
+                <button onclick="switchAdminTab('players')" id="admin-tab-players" class="flex-1 py-3 rounded-xl font-semibold text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 transition">👥 Manage Players</button>
             </div>
 
-            <!-- TAB A: MATCH DATA & LIVE CONTROL -->
+            <!-- TAB A: MATCH DATA & SCORING -->
             <div id="admin-section-data" class="school-card rounded-3xl p-6 sm:p-8 space-y-6">
-                <h3 class="text-base font-bold text-[#7A1C2E]">Live Match Command Center</h3>
-                
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-stone-600 uppercase">Select Match from Schedule</label>
-                    <select id="admin-match-select" onchange="populateMatchControls()"></select>
+                <h3 class="text-base font-bold text-[#7A1C2E]">Select Match to Manage & Score</h3>
+                <div id="admin-matches-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Match cards loaded dynamically -->
                 </div>
 
-                <div id="match-control-panel" class="space-y-4 border-t border-stone-100 pt-4">
-                    <div class="flex gap-3">
-                        <button onclick="startMatch()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase transition shadow-sm">🚀 Start Match (LIVE)</button>
-                        <button onclick="endMatch()" class="flex-1 py-3 bg-stone-700 hover:bg-stone-800 text-white font-bold rounded-xl text-xs uppercase transition shadow-sm">🏁 End Match (COMPLETED)</button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase" id="label-score-a">Team A Score</label><input type="number" id="admin-score-a" value="0"></div>
-                        <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase" id="label-score-b">Team B Score</label><input type="number" id="admin-score-b" value="0"></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div id="active-match-control-box" class="hidden space-y-6 border-t border-stone-200 pt-6">
+                    <div class="flex justify-between items-center bg-stone-50 p-4 rounded-2xl border border-stone-200">
                         <div>
-                            <label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Record Event (Goal / Point / Wicket)</label>
-                            <div class="flex gap-2">
-                                <select id="admin-event-team">
-                                    <option value="A">Team A</option>
-                                    <option value="B">Team B</option>
-                                </select>
-                                <button onclick="recordMatchEvent()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs uppercase transition">+1 Point</button>
+                            <h4 id="active-match-title" class="font-bold text-sm text-stone-900">Match #1</h4>
+                            <p id="active-match-status-label" class="text-xs text-stone-500 font-mono">Status: UPCOMING</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="adminStartMatch()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase transition">Start Match</button>
+                            <button onclick="adminEndMatch()" class="px-4 py-2 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition">End Match</button>
+                        </div>
+                    </div>
+
+                    <!-- Volleyball / General Point Scoring Pad -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3">
+                            <h5 id="team-a-label" class="font-bold text-sm text-[#7A1C2E]">Team A</h5>
+                            <div class="flex items-center justify-between">
+                                <span class="text-3xl font-black font-mono" id="disp-score-a">0</span>
+                                <div class="flex gap-2">
+                                    <button onclick="modifyScore('A', 1)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">+1 Point</button>
+                                    <button onclick="modifyScore('A', -1)" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs">-1</button>
+                                </div>
+                            </div>
+                            <div class="space-y-1 pt-2 border-t border-stone-200">
+                                <span class="text-[10px] font-bold uppercase text-stone-400">Team A Roster (Click to credit point & comment):</span>
+                                <div id="team-a-players-list" class="space-y-1.5 text-xs"></div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Man of the Match (MVP)</label>
-                            <input type="text" id="admin-mvp" placeholder="e.g. Aarush Diwakar">
+
+                        <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3">
+                            <h5 id="team-b-label" class="font-bold text-sm text-[#7A1C2E]">Team B</h5>
+                            <div class="flex items-center justify-between">
+                                <span class="text-3xl font-black font-mono" id="disp-score-b">0</span>
+                                <div class="flex gap-2">
+                                    <button onclick="modifyScore('B', 1)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">+1 Point</button>
+                                    <button onclick="modifyScore('B', -1)" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs">-1</button>
+                                </div>
+                            </div>
+                            <div class="space-y-1 pt-2 border-t border-stone-200">
+                                <span class="text-[10px] font-bold uppercase text-stone-400">Team B Roster (Click to credit point & comment):</span>
+                                <div id="team-b-players-list" class="space-y-1.5 text-xs"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Player Stat Increments (Goals / Runs / Spikes)</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <select id="admin-player-select"></select>
-                            <button onclick="incrementPlayerStat()" class="py-2 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition">+1 Goal/Stat</button>
-                        </div>
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-stone-600 uppercase">Man of the Match (MVP)</label>
+                        <input type="text" id="admin-mvp-input" placeholder="e.g. Aarush Diwakar">
+                        <button onclick="saveMvp()" class="w-full py-2.5 bg-stone-800 hover:bg-black text-white font-bold rounded-xl text-xs uppercase">Save MVP</button>
                     </div>
-
-                    <button onclick="commitLiveMatchUpdate()" class="w-full py-3.5 bg-[#7A1C2E] hover:bg-[#611222] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-sm">
-                        💾 Publish Live Match Updates
-                    </button>
                 </div>
             </div>
 
             <!-- TAB B: SCHEDULE MANAGER -->
             <div id="admin-section-schedule" class="hidden school-card rounded-3xl p-6 sm:p-8 space-y-6">
-                <h3 class="text-base font-bold text-[#7A1C2E]">Match Fixtures & Schedule Manager</h3>
+                <h3 class="text-base font-bold text-[#7A1C2E]">Manage Match Fixtures</h3>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Team A</label><select id="sched-team-a"></select></div>
                     <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Team B</label><select id="sched-team-b"></select></div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Match Venue</label><input type="text" id="sched-venue" value="Main Ground"></div>
-                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Status</label><select id="sched-status"><option value="UPCOMING">UPCOMING</option><option value="LIVE">LIVE</option><option value="COMPLETED">COMPLETED</option></select></div>
+                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Venue / Court</label><input type="text" id="sched-venue" value="Main Court"></div>
+                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Initial Date/Time</label><input type="datetime-local" id="sched-date"></div>
                 </div>
-                <button onclick="createNewFixture()" class="w-full py-3 bg-[#7A1C2E] hover:bg-[#611222] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">➕ Add New Match Fixture</button>
+                <button onclick="createNewFixture()" class="w-full py-3 bg-[#7A1C2E] hover:bg-[#611222] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">➕ Add Match Fixture</button>
+
+                <div class="border-t border-stone-200 pt-4 space-y-3">
+                    <h4 class="text-xs font-bold text-stone-500 uppercase">Existing Fixtures (Click card to edit/alter team or date)</h4>
+                    <div id="existing-fixtures-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- TAB C: MANAGE PLAYERS -->
+            <div id="admin-section-players" class="hidden school-card rounded-3xl p-6 sm:p-8 space-y-6">
+                <h3 class="text-base font-bold text-[#7A1C2E]">Add or Remove Players</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Select Team</label><select id="player-team-select"></select></div>
+                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Player Full Name</label><input type="text" id="new-player-name" placeholder="e.g. John Doe"></div>
+                    <div><label class="block text-xs font-bold text-stone-600 mb-1 uppercase">Grade / Division</label><input type="text" id="new-player-grade" placeholder="e.g. Grade 12"></div>
+                </div>
+                <button onclick="addNewPlayer()" class="w-full py-3 bg-[#7A1C2E] hover:bg-[#611222] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">➕ Register Player</button>
 
                 <div class="border-t border-stone-200 pt-4 space-y-2">
-                    <h4 class="text-xs font-bold text-stone-500 uppercase">Existing Fixtures (Click to Delete)</h4>
-                    <div id="existing-fixtures-list" class="space-y-2 text-xs"></div>
+                    <h4 class="text-xs font-bold text-stone-500 uppercase">Registered Players Directory</h4>
+                    <div id="admin-players-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs"></div>
                 </div>
             </div>
 
